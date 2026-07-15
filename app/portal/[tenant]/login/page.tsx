@@ -8,10 +8,10 @@ export default async function LoginPage({
   searchParams,
 }: {
   params: Promise<{ tenant: string }>;
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; welcome?: string }>;
 }) {
   const { tenant: slug } = await params;
-  const { error } = await searchParams;
+  const { error, welcome } = await searchParams;
   const tenant = await db.tenant.findUnique({ where: { slug } });
   if (!tenant) redirect("/");
 
@@ -71,6 +71,12 @@ export default async function LoginPage({
           </div>
 
           <form action={portalLogin} className="space-y-4 rounded-2xl border border-gray-200/80 bg-white p-6 shadow-sm">
+            {welcome && (
+              <p className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800">
+                🎉 Your portal is live — sign in with the account you just created. Your 14-day
+                free trial has started.
+              </p>
+            )}
             {error && (
               <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
                 Invalid email or password.

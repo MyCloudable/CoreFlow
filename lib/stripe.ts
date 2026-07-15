@@ -9,7 +9,12 @@ import { SEAT_ROLES } from "@/lib/constants";
  *
  * Setup (one time, in the Stripe dashboard or CLI):
  *   1. Create a Product ("ServiceFox") with two recurring Prices:
- *      a flat monthly base price and a per-unit monthly seat price.
+ *      - a flat monthly base price, and
+ *      - a GRADUATED-TIERED per-unit monthly seat price whose first tier
+ *        (units 1..includedSeats) costs $0 and whose next tier costs the
+ *        per-seat rate. The app always reports TOTAL active seats as the
+ *        quantity; Stripe's tiers make the included seats free, so the
+ *        math here and in lib/billing.ts stays trivial.
  *   2. Set env: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET,
  *      STRIPE_PRICE_BASE=price_..., STRIPE_PRICE_SEAT=price_...
  *   3. Point a webhook at POST /api/stripe/webhook with events:
@@ -170,9 +175,10 @@ export async function createBillingPortalSession(
 }
 
 /** Keep the subscription's seat quantity in line with active team members.
- *  Recomputes the count itself immediately before writing so concurrent team
- *  changes can't win with a stale value. No-ops until Stripe is configured
- *  and the tenant has subscribed. */
+ *  Quantity is TOTAL seats — the seat Price's graduated tiers zero-rate the
+ *  included ones. Recomputes the count itself immediately before writing so
+ *  concurrent team changes can't win with a stale value. No-ops until Stripe
+ *  is configured and the tenant has subscribed. */
 export async function syncSeatQuantity(tenantId: string): Promise<void> {
   if (!stripeEnabled()) return;
   const tenant = await db.tenant.findUnique({ where: { id: tenantId } });

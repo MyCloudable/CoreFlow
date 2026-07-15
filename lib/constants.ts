@@ -14,6 +14,14 @@ export type Role = keyof typeof ROLES;
 /** Billable team roles — each active one is a $/mo seat. */
 export const SEAT_ROLES = ["OWNER", "STAFF", "TECH"] as const;
 
+/** Subdomains that can never be tenant slugs (infrastructure + confusion risk). */
+export const RESERVED_SLUGS = [
+  "www", "admin", "api", "app", "mail", "email", "smtp", "imap", "ftp",
+  "signup", "login", "locked", "portal", "tech", "billing", "help", "support",
+  "docs", "blog", "status", "staging", "dev", "test", "demo", "cdn", "assets",
+  "static", "ns1", "ns2",
+] as const;
+
 export const TICKET_STATUSES: Record<string, { label: string; badge: string }> = {
   OPEN: { label: "Open", badge: "bg-blue-100 text-blue-800" },
   IN_PROGRESS: { label: "In progress", badge: "bg-amber-100 text-amber-800" },

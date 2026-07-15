@@ -83,11 +83,20 @@ export default async function BillingPage({
       )}
 
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard label="Base plan" value={`${money(summary.baseCents)}/mo`} hint="Platform fee" icon="credit-card" />
+        <StatCard
+          label="Base plan"
+          value={`${money(summary.baseCents)}/mo`}
+          hint={`Includes ${summary.includedSeats} team seats`}
+          icon="credit-card"
+        />
         <StatCard
           label="Team seats"
           value={summary.seats}
-          hint={`${money(summary.seatCents)}/mo each`}
+          hint={
+            summary.billableSeats > 0
+              ? `${summary.billableSeats} beyond included × ${money(summary.seatCents)}/mo`
+              : "All within your included seats"
+          }
           icon="users"
         />
         <StatCard label="Monthly total" value={`${money(summary.totalCents)}/mo`} icon="chart" />

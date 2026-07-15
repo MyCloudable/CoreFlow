@@ -4,27 +4,29 @@ import { SEAT_ROLES } from "@/lib/constants";
 
 export const TRIAL_DAYS = 14;
 
-/** Billable seats = active team members (OWNER + STAFF + TECH). Clients are free. */
+/** Team seats = active OWNER + STAFF + TECH users. Clients are always free. */
 export async function seatCount(tenantId: string): Promise<number> {
   return db.user.count({
     where: { tenantId, active: true, role: { in: [...SEAT_ROLES] } },
   });
 }
 
-export function monthlyTotalCents(
-  tenant: { basePriceCents: number; seatPriceCents: number },
-  seats: number
-): number {
-  return tenant.basePriceCents + seats * tenant.seatPriceCents;
+type PlanShape = { basePriceCents: number; seatPriceCents: number; includedSeats: number };
+
+/** Seats charged beyond what the base plan includes. */
+export function billableSeats(plan: Pick<PlanShape, "includedSeats">, seats: number): number {
+  return Math.max(0, seats - plan.includedSeats);
 }
 
-type TenantBilling = {
+export function monthlyTotalCents(plan: PlanShape, seats: number): number {
+  return plan.basePriceCents + billableSeats(plan, seats) * plan.seatPriceCents;
+}
+
+type TenantBilling = PlanShape & {
   id: string;
   planStatus: string;
   trialEndsAt: Date | null;
   stripeSubscriptionId: string | null;
-  basePriceCents: number;
-  seatPriceCents: number;
 };
 
 /** Whole days of trial remaining (0 if none/expired). */
@@ -54,6 +56,8 @@ export async function billingSummary(tenant: TenantBilling) {
   const seats = await seatCount(tenant.id);
   return {
     seats,
+    includedSeats: tenant.includedSeats,
+    billableSeats: billableSeats(tenant, seats),
     baseCents: tenant.basePriceCents,
     seatCents: tenant.seatPriceCents,
     totalCents: monthlyTotalCents(tenant, seats),

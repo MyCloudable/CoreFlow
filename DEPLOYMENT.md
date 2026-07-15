@@ -195,7 +195,12 @@ their status from `/admin` and invoice however you like.
 1. **Product & prices** (Stripe Dashboard → Product catalog → Add product):
    - Product "ServiceFox" with **two recurring monthly prices**:
      - a flat **$99.00/month** price → its ID is `STRIPE_PRICE_BASE`
-     - a **$5.00/month per unit** price → its ID is `STRIPE_PRICE_SEAT`
+     - a **graduated-tiered per-unit monthly** price → its ID is `STRIPE_PRICE_SEAT`.
+       Configure the tiers to mirror the included-seats plan: **first 2 units
+       at $0.00**, then **$19.00 per unit** for unit 3 and up. The app always
+       reports the tenant's *total* active seats as the quantity; Stripe's
+       tiers make the included seats free. (If you change `includedSeats` or
+       the seat price in the database, change the tiers to match.)
 2. **Webhook** (Dashboard → Developers → Webhooks → Add endpoint):
    - URL: `https://yourdomain.com/api/stripe/webhook`
    - Events: `checkout.session.completed`, `customer.subscription.updated`,

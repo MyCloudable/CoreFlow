@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { portalContext } from "@/lib/portal";
-import { seatCount, monthlyTotalCents } from "@/lib/billing";
+import { seatCount, monthlyTotalCents, billableSeats } from "@/lib/billing";
 import { Card, PageHeader, Table } from "@/components/ui";
 import { money } from "@/lib/format";
 import { createTeamMember, setUserActive } from "@/lib/actions";
@@ -23,9 +23,13 @@ export default async function TeamPage({ params }: { params: Promise<{ tenant: s
     <div>
       <PageHeader
         title="Team"
-        subtitle={`${seats} active seat${seats === 1 ? "" : "s"} · ${money(
+        subtitle={`${seats} active seat${seats === 1 ? "" : "s"} (${tenant.includedSeats} included in your plan) · ${money(
           monthlyTotalCents(tenant, seats)
-        )}/mo (base ${money(tenant.basePriceCents)} + ${seats} × ${money(tenant.seatPriceCents)})`}
+        )}/mo${
+          billableSeats(tenant, seats) > 0
+            ? ` (base ${money(tenant.basePriceCents)} + ${billableSeats(tenant, seats)} × ${money(tenant.seatPriceCents)})`
+            : ""
+        }`}
       />
 
       <div className="grid gap-6 xl:grid-cols-[1fr_24rem]">
@@ -59,7 +63,8 @@ export default async function TeamPage({ params }: { params: Promise<{ tenant: s
 
         <Card title="Add team member">
           <p className="mb-4 text-xs text-gray-500">
-            Each active team member is a billable seat ({money(tenant.seatPriceCents)}/mo).
+            Your plan includes {tenant.includedSeats} seats; each additional active team member is{" "}
+            {money(tenant.seatPriceCents)}/mo. Client logins are always free.
           </p>
           <form action={createTeamMember} className="space-y-4">
             <div>

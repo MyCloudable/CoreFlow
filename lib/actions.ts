@@ -18,7 +18,7 @@ import {
   stripeEnabled,
   syncSeatQuantity,
 } from "@/lib/stripe";
-import { SEAT_ROLES } from "@/lib/constants";
+import { RESERVED_SLUGS, SEAT_ROLES } from "@/lib/constants";
 
 const STAFF_ROLES = ["OWNER", "STAFF"];
 
@@ -709,22 +709,32 @@ async function requirePlatformAdmin() {
   return user;
 }
 
-export async function createTenant(formData: FormData) {
-  await requirePlatformAdmin();
-  const name = str(formData, "name");
-  const slug = str(formData, "slug").toLowerCase();
-  const ownerName = str(formData, "ownerName");
-  const ownerEmail = str(formData, "ownerEmail").toLowerCase();
-  const ownerPassword = str(formData, "ownerPassword");
+type ProvisionInput = {
+  name: string;
+  slug: string;
+  ownerName: string;
+  ownerEmail: string;
+  ownerPassword: string;
+};
 
-  if (!name || !ownerName || !ownerEmail || ownerPassword.length < 8) {
-    throw new Error("All fields are required (password 8+ characters)");
+/** Shared tenant provisioning for admin creation and self-serve signup.
+ *  Returns an error message (for form display) or null on success. */
+async function provisionTenant(input: ProvisionInput): Promise<string | null> {
+  const { name, ownerName, ownerPassword } = input;
+  const slug = input.slug.toLowerCase();
+  const ownerEmail = input.ownerEmail.toLowerCase();
+
+  if (!name || !ownerName || !/.+@.+\..+/.test(ownerEmail) || ownerPassword.length < 8) {
+    return "All fields are required (valid email, password 8+ characters).";
   }
-  if (!/^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/.test(slug) || slug === "www" || slug === "admin") {
-    throw new Error("Slug must be lowercase letters/numbers/hyphens");
+  if (
+    !/^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/.test(slug) ||
+    (RESERVED_SLUGS as readonly string[]).includes(slug)
+  ) {
+    return "Subdomain must be lowercase letters, numbers, and hyphens — and not a reserved name.";
   }
   const existing = await db.tenant.findUnique({ where: { slug } });
-  if (existing) throw new Error("That subdomain is taken");
+  if (existing) return "That subdomain is already taken.";
 
   await db.tenant.create({
     data: {
@@ -741,7 +751,39 @@ export async function createTenant(formData: FormData) {
       },
     },
   });
+  return null;
+}
+
+export async function createTenant(formData: FormData) {
+  await requirePlatformAdmin();
+  const error = await provisionTenant({
+    name: str(formData, "name"),
+    slug: str(formData, "slug"),
+    ownerName: str(formData, "ownerName"),
+    ownerEmail: str(formData, "ownerEmail"),
+    ownerPassword: str(formData, "ownerPassword"),
+  });
+  if (error) throw new Error(error);
   revalidatePath("/admin");
+}
+
+/** Public self-serve trial signup from the marketing site. Failures redirect
+ *  back to the form with a message; success sends the owner to their brand-new
+ *  portal's login. */
+export async function signupTenant(formData: FormData) {
+  // Honeypot: real users never fill this hidden field.
+  if (str(formData, "company_website")) redirect("/signup?error=Something+went+wrong.");
+
+  const slug = str(formData, "slug").toLowerCase();
+  const error = await provisionTenant({
+    name: str(formData, "name"),
+    slug,
+    ownerName: str(formData, "ownerName"),
+    ownerEmail: str(formData, "ownerEmail"),
+    ownerPassword: str(formData, "ownerPassword"),
+  });
+  if (error) redirect(`/signup?error=${encodeURIComponent(error)}`);
+  redirect(`${portalUrl(slug)}/login?welcome=1`);
 }
 
 export async function setTenantStatus(formData: FormData) {

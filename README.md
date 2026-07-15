@@ -9,9 +9,13 @@ brand.
 
 Repository: [MyCloudable/CoreFlow](https://github.com/MyCloudable/CoreFlow)
 
-**Business model (built in):** $99/mo base + $5/mo per team seat (owner, staff,
-and technicians), with a **14-day free trial** for every new tenant. Client
-logins are unlimited and free — that's what makes the portal sticky.
+**Business model (built in):** $99/mo base including 2 team seats, then $19/mo
+per additional seat (owner, staff, and technicians all count), with a **14-day
+free trial** for every new tenant — self-serve signup at `/signup`. Client
+logins are unlimited and free — that's what makes the portal sticky. (Market
+context: competitors charge $29–65 per user; the closest portal comp charges
+$20/seat with a $129 base. Per-tenant pricing lives in DB columns, so existing
+tenants are grandfathered automatically when defaults change.)
 
 ## How it's organized
 
