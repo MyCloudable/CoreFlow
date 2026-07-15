@@ -1,10 +1,11 @@
-# CoreFlow
+# ServiceFox 🦊
 
 The white-label client & field service delivery platform: agencies, consultants,
 and field-service businesses give each client a **branded portal** — deliverables,
 project progress, service tickets, orders, reports, and scheduled visits — under
-their own name and colors. CoreFlow branding appears only on the operator surfaces
-(landing page and `/admin`); every tenant portal carries the tenant's brand.
+their own name and colors. ServiceFox branding appears only on the operator
+surfaces (landing page and `/admin`); every tenant portal carries the tenant's
+brand.
 
 Repository: [MyCloudable/CoreFlow](https://github.com/MyCloudable/CoreFlow)
 

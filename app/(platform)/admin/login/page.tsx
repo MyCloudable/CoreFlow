@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { adminLogin } from "@/lib/actions";
+import { FoxMark } from "@/components/logo";
 
 export default async function AdminLoginPage({
   searchParams,
@@ -14,7 +15,12 @@ export default async function AdminLoginPage({
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-900 p-6">
       <div className="w-full max-w-sm">
-        <h1 className="mb-1 text-center text-xl font-semibold text-white">CoreFlow Admin</h1>
+        <div className="mb-3 flex justify-center">
+          <FoxMark className="h-14 w-14" />
+        </div>
+        <h1 className="mb-1 text-center text-xl font-semibold text-white">
+          Service<span className="text-orange-500">Fox</span> Admin
+        </h1>
         <p className="mb-6 text-center text-sm text-gray-400">Operator console — not for tenants or clients</p>
         <form action={adminLogin} className="space-y-4 rounded-xl bg-white p-6 shadow-lg">
           {error && (

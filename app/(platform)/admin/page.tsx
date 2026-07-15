@@ -32,7 +32,7 @@ export default async function AdminDashboard() {
   return (
     <div className="mx-auto max-w-6xl p-6 lg:p-10">
       <PageHeader
-        title="CoreFlow admin"
+        title="ServiceFox admin"
         subtitle={`Signed in as ${user.email}`}
         action={
           <form action={adminLogout}>
@@ -54,7 +54,7 @@ export default async function AdminDashboard() {
             <tr key={t.id} className="hover:bg-gray-50/60">
               <td className="px-4 py-3 font-medium text-gray-900">{t.name}</td>
               <td className="px-4 py-3">
-                <a href={portalUrl(t.slug)} className="text-indigo-600 hover:underline" target="_blank" rel="noreferrer">
+                <a href={portalUrl(t.slug)} className="text-orange-600 hover:underline" target="_blank" rel="noreferrer">
                   {t.slug}.{process.env.ROOT_DOMAIN ?? "localhost:3000"}
                 </a>
               </td>

@@ -8,7 +8,7 @@ import { SEAT_ROLES } from "@/lib/constants";
  * with the 14-day free trial carried into the subscription.
  *
  * Setup (one time, in the Stripe dashboard or CLI):
- *   1. Create a Product ("CoreFlow") with two recurring Prices:
+ *   1. Create a Product ("ServiceFox") with two recurring Prices:
  *      a flat monthly base price and a per-unit monthly seat price.
  *   2. Set env: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET,
  *      STRIPE_PRICE_BASE=price_..., STRIPE_PRICE_SEAT=price_...

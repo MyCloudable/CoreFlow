@@ -5,8 +5,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"], display: "swap" });
 
 export const metadata: Metadata = {
-  title: "CoreFlow",
-  description: "CoreFlow — the white-label client & field service delivery platform",
+  title: "ServiceFox",
+  description: "ServiceFox — the white-label client & field service delivery platform",
 };
 
 export const viewport: Viewport = {
