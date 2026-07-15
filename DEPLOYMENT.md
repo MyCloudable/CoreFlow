@@ -1,4 +1,4 @@
-# Deployment Guide
+# Deploying CoreFlow
 
 One Next.js app serves everything — the landing page, your `/admin` console,
 and every tenant's branded portal on a wildcard subdomain. Deploying means:
@@ -40,12 +40,11 @@ flip.)
 
 ## Step 2 — Push the code to GitHub
 
-The repo is already initialized with an initial commit. Create an empty GitHub
-repository, then:
+The repo lives at **github.com/MyCloudable/CoreFlow** and `origin` is already
+configured — after committing the provider switch, just:
 
 ```bash
-git remote add origin https://github.com/YOUR-USER/YOUR-REPO.git
-git push -u origin main
+git push
 ```
 
 ---
@@ -144,7 +143,7 @@ Uses the included [Dockerfile](Dockerfile) and
 with Docker installed.
 
 ```bash
-git clone https://github.com/YOUR-USER/YOUR-REPO.git && cd YOUR-REPO
+git clone https://github.com/MyCloudable/CoreFlow.git && cd CoreFlow
 # 1. Make sure Step 1 (postgresql provider) is committed.
 # 2. Configure:
 export POSTGRES_PASSWORD="something-long-and-random"
@@ -186,7 +185,7 @@ take payments without status sync). Until then, run tenants manually: set
 their status from `/admin` and invoice however you like.
 
 1. **Product & prices** (Stripe Dashboard → Product catalog → Add product):
-   - Product "Client Portal Platform" with **two recurring monthly prices**:
+   - Product "CoreFlow" with **two recurring monthly prices**:
      - a flat **$99.00/month** price → its ID is `STRIPE_PRICE_BASE`
      - a **$5.00/month per unit** price → its ID is `STRIPE_PRICE_SEAT`
 2. **Webhook** (Dashboard → Developers → Webhooks → Add endpoint):

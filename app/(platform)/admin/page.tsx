@@ -32,7 +32,7 @@ export default async function AdminDashboard() {
   return (
     <div className="mx-auto max-w-6xl p-6 lg:p-10">
       <PageHeader
-        title="Platform admin"
+        title="CoreFlow admin"
         subtitle={`Signed in as ${user.email}`}
         action={
           <form action={adminLogout}>

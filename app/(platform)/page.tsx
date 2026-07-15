@@ -13,7 +13,9 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white">
       <header className="mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
-        <span className="text-lg font-bold text-gray-900">Portal Platform</span>
+        <span className="text-lg font-bold tracking-tight text-gray-900">
+          Core<span className="text-indigo-600">Flow</span>
+        </span>
         <Link href="/admin" className="text-sm font-medium text-indigo-600 hover:underline">
           Platform admin →
         </Link>

@@ -1,8 +1,12 @@
-# White-Label Client Portal Platform
+# CoreFlow
 
-A multi-tenant platform where agencies, consultants, and field-service businesses
-give each client a **branded portal** — deliverables, project progress, service
-tickets, orders, reports, and scheduled visits — under their own name and colors.
+The white-label client & field service delivery platform: agencies, consultants,
+and field-service businesses give each client a **branded portal** — deliverables,
+project progress, service tickets, orders, reports, and scheduled visits — under
+their own name and colors. CoreFlow branding appears only on the operator surfaces
+(landing page and `/admin`); every tenant portal carries the tenant's brand.
+
+Repository: [MyCloudable/CoreFlow](https://github.com/MyCloudable/CoreFlow)
 
 **Business model (built in):** $99/mo base + $5/mo per team seat (owner, staff,
 and technicians), with a **14-day free trial** for every new tenant. Client
