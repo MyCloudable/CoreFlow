@@ -1,0 +1,45 @@
+# Single-server deployment: app + Postgres.
+# BEFORE `docker compose up`: switch prisma/schema.prisma provider to
+# "postgresql" (see DEPLOYMENT.md), then push the schema and create your admin
+# from the host machine (steps in DEPLOYMENT.md "Option C").
+#
+# Put a reverse proxy with wildcard TLS (e.g. Caddy) in front for production.
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: portal
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env or the shell}
+      POSTGRES_DB: portal
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    # Bound to localhost only — for running prisma db push / create-admin
+    # from the host. Remove if you run those another way.
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U portal -d portal"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://portal:${POSTGRES_PASSWORD}@db:5432/portal
+      ROOT_DOMAIN: ${ROOT_DOMAIN:?set ROOT_DOMAIN, e.g. yourdomain.com}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      STRIPE_PRICE_BASE: ${STRIPE_PRICE_BASE:-}
+      STRIPE_PRICE_SEAT: ${STRIPE_PRICE_SEAT:-}
+    ports:
+      - "3000:3000"
+
+volumes:
+  pgdata:

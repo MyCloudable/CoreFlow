@@ -1,0 +1,231 @@
+// White-label client & field service delivery platform — data model.
+//
+// Local dev uses SQLite (zero setup). For production Postgres, change
+// provider to "postgresql" and point DATABASE_URL at your database —
+// the schema is written to be compatible with both (no enums, Int cents
+// for money). See README "Going to production".
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// One row per agency/coach/consultant on the platform. slug = subdomain.
+model Tenant {
+  id                   String   @id @default(cuid())
+  slug                 String   @unique
+  name                 String
+  logoUrl              String?
+  brandColor           String   @default("#4f46e5")
+  supportEmail         String?
+  // TRIAL | ACTIVE | PAST_DUE | SUSPENDED
+  planStatus           String    @default("TRIAL")
+  trialEndsAt          DateTime?
+  basePriceCents       Int       @default(9900)
+  seatPriceCents       Int       @default(500)
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  createdAt            DateTime  @default(now())
+
+  users        User[]
+  companies    ClientCompany[]
+  projects     Project[]
+  deliverables Deliverable[]
+  tickets      Ticket[]
+  orders       Order[]
+  reports      Report[]
+  appointments Appointment[]
+}
+
+// PLATFORM_ADMIN users have tenantId = null (that's us).
+// OWNER/STAFF/TECH are the tenant's team (billable seats); TECH works from the
+// mobile field portal. CLIENT belongs to a ClientCompany.
+model User {
+  id           String   @id @default(cuid())
+  tenantId     String?
+  tenant       Tenant?  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  companyId    String?
+  company      ClientCompany? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  email        String
+  passwordHash String
+  name         String
+  // PLATFORM_ADMIN | OWNER | STAFF | TECH | CLIENT
+  role         String
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  sessions        Session[]
+  ticketsCreated  Ticket[]        @relation("TicketCreatedBy")
+  ticketsAssigned Ticket[]        @relation("TicketAssignedTo")
+  ticketMessages  TicketMessage[]
+  appointments    Appointment[]   @relation("TechAppointments")
+
+  @@unique([tenantId, email])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+// A client organization of the tenant (the tenant's customer).
+model ClientCompany {
+  id           String   @id @default(cuid())
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name         String
+  contactName  String?
+  contactEmail String?
+  address      String?
+  createdAt    DateTime @default(now())
+
+  users        User[]
+  projects     Project[]
+  deliverables Deliverable[]
+  tickets      Ticket[]
+  orders       Order[]
+  reports      Report[]
+  appointments Appointment[]
+}
+
+model Project {
+  id          String    @id @default(cuid())
+  tenantId    String
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  companyId   String
+  company     ClientCompany @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  // ACTIVE | PAUSED | COMPLETED
+  status      String    @default("ACTIVE")
+  dueDate     DateTime?
+  createdAt   DateTime  @default(now())
+
+  milestones   Milestone[]
+  deliverables Deliverable[]
+}
+
+model Milestone {
+  id        String    @id @default(cuid())
+  projectId String
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title     String
+  done      Boolean   @default(false)
+  dueDate   DateTime?
+  sortOrder Int       @default(0)
+}
+
+model Deliverable {
+  id          String    @id @default(cuid())
+  tenantId    String
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  companyId   String
+  company     ClientCompany @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  projectId   String?
+  project     Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  title       String
+  description String?
+  linkUrl     String?
+  // IN_PROGRESS | DELIVERED | APPROVED
+  status      String    @default("IN_PROGRESS")
+  deliveredAt DateTime?
+  createdAt   DateTime  @default(now())
+}
+
+model Ticket {
+  id           Int      @id @default(autoincrement())
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  companyId    String
+  company      ClientCompany @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  subject      String
+  // OPEN | IN_PROGRESS | WAITING_ON_CLIENT | RESOLVED | CLOSED
+  status       String   @default("OPEN")
+  // LOW | NORMAL | HIGH | URGENT
+  priority     String   @default("NORMAL")
+  createdById  String
+  createdBy    User     @relation("TicketCreatedBy", fields: [createdById], references: [id])
+  assignedToId String?
+  assignedTo   User?    @relation("TicketAssignedTo", fields: [assignedToId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  messages     TicketMessage[]
+  appointments Appointment[]
+}
+
+// A scheduled field visit, assigned to one team member (usually a TECH).
+model Appointment {
+  id             String   @id @default(cuid())
+  tenantId       String
+  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  companyId      String
+  company        ClientCompany @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  ticketId       Int?
+  ticket         Ticket?  @relation(fields: [ticketId], references: [id], onDelete: SetNull)
+  techId         String
+  tech           User     @relation("TechAppointments", fields: [techId], references: [id])
+  title          String
+  notes          String?
+  address        String?
+  scheduledStart DateTime
+  scheduledEnd   DateTime
+  // SCHEDULED | EN_ROUTE | ON_SITE | COMPLETED | CANCELED
+  status         String   @default("SCHEDULED")
+  createdAt      DateTime @default(now())
+}
+
+model TicketMessage {
+  id        String   @id @default(cuid())
+  ticketId  Int
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  body      String
+  createdAt DateTime @default(now())
+}
+
+model Order {
+  id        Int      @id @default(autoincrement())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  companyId String
+  company   ClientCompany @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  title     String
+  notes     String?
+  // PENDING | APPROVED | IN_PROGRESS | COMPLETED | CANCELED
+  status    String   @default("PENDING")
+  createdAt DateTime @default(now())
+
+  items OrderItem[]
+}
+
+model OrderItem {
+  id             String @id @default(cuid())
+  orderId        Int
+  order          Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  description    String
+  quantity       Int    @default(1)
+  unitPriceCents Int
+}
+
+model Report {
+  id          String    @id @default(cuid())
+  tenantId    String
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  companyId   String
+  company     ClientCompany @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  title       String
+  periodLabel String?
+  body        String
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+}

@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+:root {
+  --brand: #4f46e5;
+}
+
+/* Derived tints. Declared on every element (not :root) so they re-resolve from
+   the inherited --brand — tenant layouts override --brand with an inline style
+   on a wrapper div, and a :root-computed tint would keep the default color. */
+*,
+::before,
+::after {
+  --brand-soft: color-mix(in srgb, var(--brand) 9%, white);
+  --brand-softer: color-mix(in srgb, var(--brand) 5%, white);
+  --brand-strong: color-mix(in srgb, var(--brand) 80%, black);
+  --brand-hover: color-mix(in srgb, var(--brand) 88%, black);
+}
+
+body {
+  @apply bg-gray-50 text-gray-900 antialiased;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+/* --- Form controls ------------------------------------------------------ */
+
+.input {
+  @apply w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-xs outline-none transition-colors placeholder:text-gray-400 focus:border-[var(--brand)] focus:ring-2 focus:ring-[var(--brand)]/20;
+}
+
+.label {
+  @apply mb-1.5 block text-xs font-medium text-gray-600;
+}
+
+/* --- Buttons ------------------------------------------------------------ */
+
+.btn,
+.btn-brand,
+.btn-secondary,
+.btn-ghost {
+  @apply inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-medium transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] active:scale-[0.98];
+}
+
+.btn-brand {
+  @apply bg-[var(--brand)] text-[var(--brand-fg,#fff)] shadow-sm hover:bg-[var(--brand-hover)];
+}
+
+.btn-secondary {
+  @apply border border-gray-300 bg-white text-gray-700 shadow-xs hover:bg-gray-50 hover:text-gray-900;
+}
+
+.btn-ghost {
+  @apply text-gray-600 hover:bg-gray-100 hover:text-gray-900;
+}
+
+/* Large touch targets for the mobile field portal. */
+.btn-lg {
+  @apply min-h-12 rounded-xl px-5 text-base;
+}
